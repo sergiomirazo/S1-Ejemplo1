@@ -1,0 +1,158 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small Actividad 1 -- Semana 1}
+\lhead{\small Sistemas de Información -- UNIDEP}
+\cfoot{\thepage}
+
+\title{\textbf{Documentación Técnica, Marco Teórico y Evaluación}\\
+\large Construcción de una API REST con Flask}
+\author{Profesor: Sergio Mirazo \\ Materia: Sistemas de Información\\
+Ingeniería en Sistemas Computacionales -- UNIDEP}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\section*{Documentación de Endpoints y Estructura del Proyecto}
+
+\subsection*{Tabla de Endpoints}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|l|p{6cm}|c|}
+\hline
+\textbf{Método} & \textbf{Ruta} & \textbf{Descripción} & \textbf{Códigos HTTP} \\ \hline
+GET    & \verb|/api/recursos|          & Retorna todos los registros almacenados.        & 200 \\ \hline
+GET    & \verb|/api/recursos/<id>|     & Retorna un recurso específico por su identificador. & 200, 404 \\ \hline
+POST   & \verb|/api/recursos|          & Crea un nuevo registro. Requiere cuerpo JSON.   & 201, 400 \\ \hline
+PUT    & \verb|/api/recursos/<id>|     & Actualiza parcialmente o completamente un registro existente. & 200, 400, 404 \\ \hline
+DELETE & \verb|/api/recursos/<id>|     & Elimina un registro por su identificador.       & 200, 404 \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection*{Ejemplo de Petición y Respuesta (POST)}
+\textbf{Cuerpo de la petición:}
+\begin{verbatim}
+{
+  "nombre": "Pedro Sánchez",
+  "email": "pedro@email.com",
+  "rol": "DevOps"
+}
+\end{verbatim}
+
+\textbf{Respuesta esperada (201 Created):}
+\begin{verbatim}
+{
+  "mensaje": "Recurso creado",
+  "id": 4,
+  "dato": {
+    "nombre": "Pedro Sánchez",
+    "email": "pedro@email.com",
+    "rol": "DevOps"
+  }
+}
+\end{verbatim}
+
+\subsection*{Estructura del Proyecto}
+\begin{verbatim}
+api_unidep_semana1/
+|-- main.py          # Lógica de la API, rutas y controladores
+|-- bd.py            # Almacén simulado en memoria (diccionario)
+`-- README.md        # Documentación técnica y guía de ejecución
+\end{verbatim}
+
+\textbf{Notas técnicas:} La base de datos se mantiene en volátil (memoria RAM del proceso). Al reiniciar el servidor, los datos vuelven a su estado inicial definido en \texttt{bd.py}. Este enfoque es válido para etapas de prototipado y aprendizaje de flujo HTTP.
+
+\section*{Marco Teórico de Reforzamiento}
+
+\subsection*{1. Fundamentos de una API REST}
+Una \textbf{API (Application Programming Interface)} es un conjunto de reglas y protocolos que permite la comunicación entre sistemas de software. El estilo \textbf{REST (Representational State Transfer)} se basa en principios arquitectónicos definidos por Roy Fielding:
+\begin{itemize}
+    \item \textbf{Cliente-Servidor:} Separación de responsabilidades para mejorar portabilidad y escalabilidad.
+    \item \textbf{Stateless (Sin estado):} Cada petición contiene toda la información necesaria para ser procesada. El servidor no guarda contexto de sesión entre peticiones.
+    \item \textbf{Interfaz uniforme:} Uso estandarizado de métodos HTTP, URI identificadores y formatos de representación (JSON, XML).
+    \item \textbf{Cacheable:} Las respuestas pueden marcarse como cacheables para reducir latencia y carga.
+\end{itemize}
+
+\subsection*{2. Protocolo HTTP y Códigos de Estado}
+HTTP (Hypertext Transfer Protocol) es el protocolo subyacente de las APIs REST. Su estructura se compone de:
+\begin{itemize}
+    \item \textbf{Línea de petición:} Método, URI y versión HTTP.
+    \item \textbf{Encabezados (Headers):} Metadatos como \texttt{Content-Type}, \texttt{Authorization}, \texttt{Accept}.
+    \item \textbf{Cuerpo (Body):} Payload de la petición o respuesta (comúnmente JSON).
+\end{itemize}
+
+\textbf{Códigos de estado relevantes:}
+\begin{itemize}
+    \item \textbf{2xx (Éxito):} 200 OK, 201 Created, 204 No Content.
+    \item \textbf{4xx (Error del cliente):} 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found.
+    \item \textbf{5xx (Error del servidor):} 500 Internal Server Error, 502 Bad Gateway.
+\end{itemize}
+
+\subsection*{3. Arquitectura: Data Warehouse vs Data Lakehouse}
+\begin{itemize}
+    \item \textbf{Data Warehouse (DW):} Repositorio centralizado de datos estructurados y procesados. Utiliza el paradigma \textit{Schema-on-Write}, optimizado para consultas analíticas (OLAP) y reportes de BI. Su gobernanza es estricta, pero su escalabilidad horizontal es costosa.
+    \item \textbf{Data Lake:} Almacén de datos crudos en cualquier formato (estructurados, semiestructurados, no estructurados). Usa \textit{Schema-on-Read}, ofreciendo flexibilidad y bajo costo, pero con desafíos en calidad, gobernanza y consistencia ACID.
+    \item \textbf{Data Lakehouse:} Arquitectura híbrida que combina la flexibilidad y economía del Data Lake con la gestión transaccional, gobernanza y rendimiento del DW. Utiliza formatos abiertos como Delta Lake, Apache Iceberg o Hudi para soportar transacciones ACID, time-travel y consumo directo desde motores de BI y Machine Learning sin necesidad de duplicar datos.
+\end{itemize}
+
+\subsection*{4. Pipelines para APIs}
+Las APIs modernas son componentes críticos en los \textbf{pipelines de datos}:
+\begin{itemize}
+    \item \textbf{Ingestión:} APIs públicas o privadas extraen datos de fuentes externas (SaaS, sensores, logs).
+    \item \textbf{Transformación y Orquestación:} Herramientas como Apache Airflow, Prefect o dbt consumen endpoints, validan esquemas y aplican reglas de negocio.
+    \item \textbf{API Gateways:} Puntos de entrada que gestionan autenticación, rate limiting, caché, enrutamiento y monitoreo antes de llegar a los microservicios.
+    \item \textbf{Patrones de entrega:} Síncrono (REST/GraphQL) vs Asíncrono (Webhooks, colas de mensajes como RabbitMQ o Kafka). En arquitecturas de datos modernas, se prioriza el desacoplamiento mediante eventos para garantizar resiliencia y escalabilidad.
+\end{itemize}
+
+\subsection*{5. Bases de Datos: SQL vs NoSQL}
+\begin{itemize}
+    \item \textbf{SQL (Relacionales):} Basadas en tablas con esquemas rígidos. Garantizan propiedades \textbf{ACID} (Atomicidad, Consistencia, Aislamiento, Durabilidad). Ideales para transacciones financieras, relaciones complejas y consistencia estricta. Ejemplos: PostgreSQL, MySQL, Oracle.
+    \item \textbf{NoSQL (No Relacionales):} Modelos flexibles: documentos (MongoDB), clave-valor (Redis), columnares (Cassandra) o grafos (Neo4j). Siguen principios \textbf{BASE} (Basically Available, Soft state, Eventual consistency). Optimizadas para escalabilidad horizontal, grandes volúmenes de datos semiestructurados y baja latencia.
+    \item \textbf{Criterios de selección:} Volumen y variedad de datos, necesidad de transacciones estrictas, patrones de consulta, requisitos de escalabilidad y tolerancia a fallos. En la práctica, sistemas modernos adoptan arquitecturas \textit{polyglot persistence}, combinando ambos según el caso de uso.
+\end{itemize}
+
+\section*{Cuestionario de Reforzamiento}
+
+\begin{enumerate}[label=\arabic*.]
+    \item ¿Qué significa que una API REST sea ``stateless'' y cuál es su implicación práctica en el diseño del servidor?
+    \item Mencione tres diferencias clave entre los métodos HTTP PUT y PATCH.
+    \item ¿Cuál es la función principal de un API Gateway en una arquitectura distribuida?
+    \item Explique el concepto de \textit{Schema-on-Write} y en qué arquitectura de datos se aplica tradicionalmente.
+    \item ¿Qué ventaja principal ofrece un Data Lakehouse respecto a un Data Warehouse tradicional en entornos de Machine Learning?
+    \item Defina el acrónimo ACID y explique por qué es crítico en sistemas transaccionales.
+    \item ¿En qué consiste el principio de \textit{Schema-on-Read} y qué tipo de base de datos lo utiliza comúnmente?
+    \item Mencione dos escenarios donde una base de datos NoSQL es preferible sobre una relacional.
+    \item ¿Qué código HTTP debe retornar una API cuando se intenta actualizar un recurso con un cuerpo JSON malformado?
+    \item ¿Cuál es la diferencia fundamental entre un pipeline ETL y un pipeline ELT?
+    \item Explique brevemente cómo funciona el mecanismo de rate limiting en un endpoint público.
+    \item ¿Qué formato de datos es estándar en las APIs REST modernas y por qué ha reemplazado a XML en muchos casos?
+    \item Describa el rol de un webhook en la integración de APIs asíncronas.
+    \item ¿Qué propiedad de las bases de datos relacionales garantiza que una transacción se ejecute por completo o no se ejecute en absoluto?
+    \item ¿Por qué un Data Lake tradicional puede presentar problemas de gobernanza y calidad de datos a largo plazo?
+    \item Mencione dos estrategias para manejar la versión de una API REST (API versioning).
+    \item ¿Qué diferencia existe entre escalabilidad vertical y horizontal? ¿Cuál es más común en entornos NoSQL?
+    \item Explique por qué el método POST se considera no idempotente, mientras que PUT sí lo es.
+    \item ¿Qué rol juegan los índices en el rendimiento de una base de datos y qué costo operativo introducen?
+    \item Si una API retorna un error 503 Service Unavailable, ¿qué indica esto sobre el estado del servidor y qué acción debería tomar un cliente resiliente?
+\end{enumerate}
+
+
+
+
+
+\end{document}
